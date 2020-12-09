@@ -44,7 +44,7 @@ class Rat:
 
         A Rat with a name/symbol and a position on the grid of (row, col)
 
-        >>> paul = Rat('P', 1, 4)
+        >>> paul = Rat(RAT_2_CHAR, 1, 4)
         >>> paul.symbol
         'P'
         >>> paul.row
@@ -118,25 +118,64 @@ class Maze:
         Creates the maze from a list of lists of str representing each row of the maze and \
         creates rat1 and rat2, placing them in the maze.
 
-        >>> map = [['#', '#', '#', '#', '#', '#', '#'], \
-              ['#', '.', '.', '.', '.', '.', '#'], \
-              ['#', '.', '#', '#', '#', '.', '#'], \
-              ['#', '.', '.', '@', '#', '.', '#'], \
-              ['#', '@', '#', '.', '@', '.', '#'], \
-              ['#', '#', '#', '#', '#', '#', '#']]
-        >>> jess = Rat('J', 1, 1),
-        >>> paul = Rat('P', 1, 4)
-        >>> my_maze = Maze(map, jess, paul)
-        >>> map == my_maze.maze
-        True
-        >>> print(maze_1.rat_2)
-        P at (1, 4) ate 0 sprouts.
+        >>> my_maze = Maze([['#', '#', '#', '#', '#', '#', '#'], \
+                              ['#', '.', '.', '.', '.', '.', '#'], \
+                              ['#', '.', '#', '#', '#', '.', '#'], \
+                              ['#', '.', '.', '@', '#', '.', '#'], \
+                              ['#', '@', '#', '.', '@', '.', '#'], \
+                              ['#', '#', '#', '#', '#', '#', '#']], \
+                            Rat('J', 1, 1), \
+                            Rat('P', 1, 4))
         
+        >>> print(my_maze.rat_2)
+        P at (1, 4) ate 0 sprouts.
+
+        >>> print(my_maze.num_sprouts_left)
+        3
         """
 
         self.maze = map
         self.rat_1 = rat_1
         self.rat_2 = rat_2
+
+        # Put the rat symbols into the maze map
+        self.maze[self.rat_1.row][self.rat_1.col] = self.rat_1.symbol
+        self.maze[self.rat_2.row][self.rat_2.col] = self.rat_2.symbol
+        
+        self.num_sprouts_left = 0
+        for i in range(len(self.maze)):
+            self.num_sprouts_left = self.num_sprouts_left + self.maze[i].count(SPROUT)
+
+    def is_wall(self, row, col):
+        """ (Maze, int, int) -> bool
+
+        Returns true if and only if the character at the row and col is a wall character or 
+
+        Precondition:
+        The number of rows must be <= the number of rows in the maze and \
+        the number of columns must be <= the number of columns of the maze \
+        row <= len(my_maze.maze) and col <= len(my_maze.maze[0])
+
+        >>> my_maze = Maze([['#', '#', '#', '#', '#', '#', '#'], \
+                              ['#', '.', '.', '.', '.', '.', '#'], \
+                              ['#', '.', '#', '#', '#', '.', '#'], \
+                              ['#', '.', '.', '@', '#', '.', '#'], \
+                              ['#', '@', '#', '.', '@', '.', '#'], \
+                              ['#', '#', '#', '#', '#', '#', '#']], \
+                            Rat('J', 1, 1), \
+                            Rat('P', 1, 4))
+                            
+        >>> my_maze.is_wall(0,0)
+        True
+        >>> my_maze.is_wall(1,2)
+        False
+        
+        """
+
+        if self.maze[row][col] == WALL:
+            return True
+        else:
+            return False
     
     def get_character(self, row, col):
         """(Maze, int, int) -> str
@@ -144,21 +183,160 @@ class Maze:
 
         Precondition:
         The number of rows must be <= the number of rows in the maze and \
-        the number of columns must be <= the number of columns of the maze
+        the number of columns must be <= the number of columns of the maze \
         row <= len(my_maze.maze) and col <= len(my_maze.maze[0])
         
-        >>> get_character(0,0)
-        WALL
+        >>> my_maze = Maze([['#', '#', '#', '#', '#', '#', '#'], \
+                              ['#', '.', '.', '.', '.', '.', '#'], \
+                              ['#', '.', '#', '#', '#', '.', '#'], \
+                              ['#', '.', '.', '@', '#', '.', '#'], \
+                              ['#', '@', '#', '.', '@', '.', '#'], \
+                              ['#', '#', '#', '#', '#', '#', '#']], \
+                            Rat('J', 1, 1), \
+                            Rat('P', 1, 4))
+                            
+        >>> my_maze.get_character(0,0)
+        'WALL'
 
-        >>> get_character(1,1)
-        HALL
+        >>> my_maze.get_character(1,2)
+        'HALL'
 
-        >>> get_character(1,4)
-        P at (1, 4) ate 0 sprouts.
+        >> my_maze.get_character(4,1)
+        'SPROUT'
+
+        >>> my_maze.get_character(1,4)
+        'P'
+
+        >>> my_maze.get_character(10,6)
+        'This position is outside of the map boundaries. Please provide a row that is 6 or less and a column that is 7 or less.'
 
         """
-        #Need to start working here.
+        
+        if row <= len (self.maze) and col <= len(self.maze[0]):
+            if self.rat_1.row == row and self.rat_1.col == col:
+                return self.rat_1.symbol
+            elif self.rat_2.row == row and self.rat_2.col == col:
+                return self.rat_2.symbol
+            elif self.is_wall(row,col):
+                return 'WALL'
+            elif self.maze[row][col] == HALL:
+                return 'HALL'
+            elif self.maze[row][col] == SPROUT:
+                return 'SPROUT'
+        else:
+            return 'This position is outside of the map boundaries. '\
+                    'Please provide a row that is {0} or less and a column ' \
+                    'that is {1} or less.'.format(len(self.maze), len(self.maze[0]))
 
+    def move(self, rat, v, h):
+        """ (Maze, Rat, int, int) -> bool
+
+        Returns true if and only if there isn't a wall in the way and changes a rat's vertical position by v and horizontally by h
+
+        >>> my_maze = Maze([['#', '#', '#', '#', '#', '#', '#'], \
+                              ['#', '.', '.', '.', '.', '.', '#'], \
+                              ['#', '.', '#', '#', '#', '.', '#'], \
+                              ['#', '.', '.', '@', '#', '.', '#'], \
+                              ['#', '@', '#', '.', '@', '.', '#'], \
+                              ['#', '#', '#', '#', '#', '#', '#']], \
+                            Rat('J', 1, 1), \
+                            Rat('P', 3, 1))
+
+        >>> my_maze.move(my_maze.rat_2, DOWN, NO_CHANGE)
+        True
+        >>> my_maze.rat_2.row
+        4
+        >>> my_maze.rat_2.col
+        1
+        >>> my_maze.rat_2.num_sprouts_eaten
+        1
+
+        >>> my_maze.move(my_maze.rat_1, NO_CHANGE, RIGHT)
+        True
+        >>> my_maze.rat_1.row
+        1
+        >>> my_maze.rat_1.col
+        2
+        >>> my_maze.rat_1.num_sprouts_eaten
+        0
+
+        >>> my_maze.move(my_maze.rat_2, DOWN, NO_CHANGE)
+        False
+        >>> my_maze.rat_2.row
+        4
+        >>> my_maze.rat_2.col
+        1
+        >>> my_maze.rat_2.num_sprouts_eaten
+        1
+        """
+
+        # Move the rat horizontally and vertically if and only if there is not a wall in front of it.
+        if not self.is_wall(rat.row, rat.col + h) and not self.is_wall(rat.row + v, rat.col):
+
+            # Change the current location back to a hallway and move the rat to the new location.
+            self.maze[rat.row][rat.col] = HALL
+            rat.set_location(rat.row + v, rat.col + h)
+        
+
+            
+            # Check to see if there is a sprout at the new position, and if there is, eat it and modify the maze map
+            if self.maze[rat.row][rat.col] == SPROUT:
+                rat.eat_sprout()
+                self.maze[rat.row][rat.col] = HALL
+                self.num_sprouts_left = self.num_sprouts_left - 1
+
+            return True
+
+        else:
+            return False
+
+    def __str__(self):
+        """ (Maze) -> str
+
+        Prints a str representation of the Maze and the status of the rats
+
+        >>> my_maze = Maze([['#', '#', '#', '#', '#', '#', '#'], \
+                              ['#', '.', '.', '.', '.', '.', '#'], \
+                              ['#', '.', '#', '#', '#', '.', '#'], \
+                              ['#', '.', '.', '@', '#', '.', '#'], \
+                              ['#', '@', '#', '.', '@', '.', '#'], \
+                              ['#', '#', '#', '#', '#', '#', '#']], \
+                            Rat('J', 1, 1), \
+                            Rat('P', 1, 4))
+
+        >>> print(my_maze)
+        #######
+        #J..P.#
+        #.###.#
+        #..@#.#
+        #@#.@.#
+        #######
+        J at (1, 1) ate 0 sprouts.
+        P at (1, 4) ate 0 sprouts.
+        
+        """
+        row = ''
+
+        
+        
+        for i in range(len(self.maze)):
+            for j in range(len(self.maze[i])):
+
+                if i == self.rat_1.row and j == self.rat_1.col:
+                    row = row + self.rat_1.symbol
+                elif i == self.rat_2.row and j == self.rat_2.col:
+                    row = row + self.rat_2.symbol
+                else: 
+                    row = row + self.maze[i][j]
+            row = row + '\n'
+
+        row = row + str(self.rat_1) + '\n' + str(self.rat_2)
+        return row
+                
+
+## To Do:
+## 
+## 3) Remove tests from paul and jess into self.rat_1 and self.rat_2
 if __name__ == '__main__':
 
     import doctest
