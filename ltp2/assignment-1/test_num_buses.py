@@ -5,7 +5,7 @@ import unittest
 class TestNumBuses(unittest.TestCase):
     """ Example tests for function a1.num_buses. """
 
-    def test_general_case(self):
+    def test_one_bus(self):
         """
         Test num_buses where there are more people than will fit on a single bus.
         """
@@ -15,7 +15,7 @@ class TestNumBuses(unittest.TestCase):
         self.assertEqual(actual, expected)
 
             
-    def test_zero_case(self):
+    def test_zero_buses(self):
         """
         Test num_buses where there are no people
         """
@@ -25,13 +25,18 @@ class TestNumBuses(unittest.TestCase):
         self.assertEqual(actual, expected)
 
         
-    def test_boundary_case(self):
+    def test_full_bus(self):
         """
         Test num_buses where there are exactly enough people to fill all buses
         """
 
         actual = a1.num_buses(50)
         expected = 1
+        self.assertEqual(actual, expected)
+
+    def test_boundary_case(self):
+        actual = a1.num_buses(51)
+        expected = 2
         self.assertEqual(actual, expected)
 
 
